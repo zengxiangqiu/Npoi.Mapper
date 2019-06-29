@@ -136,5 +136,41 @@ namespace test
             // Assert
             Assert.AreEqual(str, objs[0].Value.NIF);
         }
+
+        [TestMethod]
+        public void TakeDynamic_MultipleSheets_Issue50()
+        {
+            // Arrange
+            const string sheetName1 = "sheet1";
+            const string sheetName2 = "sheet2";
+            var workbook = GetEmptyWorkbook();
+
+            var sheet1 = workbook.CreateSheet(sheetName1);
+            var header1 = sheet1.CreateRow(0);
+            header1.CreateCell(0).SetCellValue("A");
+            header1.CreateCell(1).SetCellValue("B");
+            var row1 = sheet1.CreateRow(1);
+            row1.CreateCell(0).SetCellValue(1);
+            row1.CreateCell(1).SetCellValue(2);
+
+            var sheet2 = workbook.CreateSheet(sheetName2);
+            var header2 = sheet2.CreateRow(0);
+            header2.CreateCell(0).SetCellValue("X");
+            header2.CreateCell(1).SetCellValue("Y");
+            var row2 = sheet2.CreateRow(1);
+            row2.CreateCell(0).SetCellValue("a");
+            row2.CreateCell(1).SetCellValue("b");
+
+            // Act
+            var mapper = new Mapper(workbook);
+            var objs1 = mapper.Take<dynamic>(sheetName1).ToList();
+            var objs2 = mapper.Take<dynamic>(sheetName2).ToList();
+
+            // Assert
+            Assert.AreEqual(1, objs1[0].Value.A);
+            Assert.AreEqual(2, objs1[0].Value.B);
+            Assert.AreEqual("a", objs2[0].Value.X);
+            Assert.AreEqual("b", objs2[0].Value.Y);
+        }
     }
 }
