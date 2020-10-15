@@ -19,7 +19,7 @@ namespace Npoi.Mapper.Attributes
         /// <summary>
         /// Column index.
         /// </summary>
-        public int Index { get; internal set; } = -1;
+        public int Index { get;  set; } = -1;
 
         /// <summary>
         /// Column name.
@@ -39,7 +39,7 @@ namespace Npoi.Mapper.Attributes
         {
             get => _property;
 
-            internal set
+            set
             {
                 _property = value;
 
@@ -75,7 +75,7 @@ namespace Npoi.Mapper.Attributes
         /// <summary>
         /// Indicate whether to ignore the property.
         /// </summary>
-        internal bool? Ignored { get; set; }
+        public bool? Ignored { get; set; }
 
         /// <summary>
         /// Gets or sets the custom format, see https://support.office.com/en-us/article/Create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4 for the syntax.

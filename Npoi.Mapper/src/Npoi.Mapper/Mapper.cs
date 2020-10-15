@@ -320,11 +320,11 @@ namespace Npoi.Mapper
         /// <param name="objects">The objects to save.</param>
         /// <param name="sheetName">The sheet name</param>
         /// <param name="overwrite"><c>true</c> to overwrite existing rows; otherwise append.</param>
-        public void Put<T>(IEnumerable<T> objects, string sheetName, bool overwrite = true)
+        public void Put<T>(IEnumerable<T> objects, string sheetName, bool overwrite = true, Action<Dictionary<PropertyInfo, ColumnAttribute>> order = null)
         {
             if (Workbook == null) Workbook = new XSSFWorkbook();
             var sheet = Workbook.GetSheet(sheetName) ?? Workbook.CreateSheet(sheetName);
-            Put(sheet, objects, overwrite);
+            Put(sheet, objects, overwrite, order);
         }
 
         /// <summary>
@@ -862,7 +862,7 @@ namespace Npoi.Mapper
 
         #region Export
 
-        private void Put<T>(ISheet sheet, IEnumerable<T> objects, bool overwrite)
+        private void Put<T>(ISheet sheet, IEnumerable<T> objects, bool overwrite, Action<Dictionary<PropertyInfo, ColumnAttribute>>  order =null )
         {
             var sheetName = sheet.SheetName;
             var firstRowIndex = GetFirstRowIndex(sheet);
@@ -871,8 +871,9 @@ namespace Npoi.Mapper
             var type = MapHelper.GetConcreteType(objectArray);
 
             var columns = GetTrackedColumns(sheetName, type) ??
-                           GetColumns(firstRow ?? PopulateFirstRow(sheet, null, type), type);
-            firstRow = sheet.GetRow(firstRowIndex) ?? PopulateFirstRow(sheet, columns, type);
+                           GetColumns(firstRow ?? PopulateFirstRow(sheet, null, type,order), type);
+            firstRow = sheet.GetRow(firstRowIndex) ?? PopulateFirstRow(sheet, columns, type,order);
+
 
             var rowIndex = overwrite
                 ? HasHeader ? firstRowIndex + 1 : firstRowIndex
@@ -943,7 +944,7 @@ namespace Npoi.Mapper
             Workbook.Write(stream);
         }
 
-        private IRow PopulateFirstRow(ISheet sheet, List<ColumnInfo> columns, Type type)
+        private IRow PopulateFirstRow(ISheet sheet, List<ColumnInfo> columns, Type type, Action<Dictionary<PropertyInfo, ColumnAttribute>> Order = null)
         {
             var row = sheet.CreateRow(GetFirstRowIndex(sheet));
 
@@ -966,6 +967,9 @@ namespace Npoi.Mapper
             // If no column cached, populate the first row with attributes and object properties.
 
             MapHelper.LoadAttributes(Attributes, type);
+
+            //order these
+            Order?.Invoke(Attributes);
 
             var attributes = Attributes.Where(p => p.Value.Property != null && p.Value.Property.ReflectedType == type);
             var properties = new List<PropertyInfo>(type.GetProperties(MapHelper.BindingFlag));
